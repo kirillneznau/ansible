@@ -1,0 +1,31 @@
+
+---
+- name: Playbook for creating users on servers
+  hosts: centos
+  become: yes
+  
+  tasks:
+  
+  - name: Test connection
+    ping:
+
+  - name: Добавить пользователя 'mkl' с добавлением его в группу 'wheel'. Группа 'wheel' даёт права sudo
+    user:
+      name: mkl
+      password: $6$jxlP17sUuVBiYwmR$z60upKu6.BNt.41y4BZN0f/d29VuF5Olna9nJd346QliGZb7eRkXSBZekpqdvyF6UDT7rFA2nurMYMlQFjusg. 
+      shell: /bin/bash
+      groups: wheel
+      append: yes
+
+  - name: Создать 2048-битовый SSH ключ для mkl в ~mkl/.ssh/mkl-ssh-key
+    user:
+      name: mkl
+      generate_ssh_key: yes
+      ssh_key_bits: 2048
+      ssh_key_file: .ssh/mkl-ssh-key
+
+  - name: Установить authorized key из файла mkl-ssh-key.pub
+    authorized_key:
+      user: mkl
+      state: present
+      key: "{{ lookup('file', '/home/kiril/.ssh/mkl-ssh-key.pub') }}"

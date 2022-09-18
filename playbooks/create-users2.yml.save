@@ -1,0 +1,39 @@
+
+---
+- name: Playbook for creating users on servers
+  hosts: centos
+  become: yes
+  vars:
+    users:
+      - mkl
+      - zdv
+      - qwe
+
+  tasks:
+  
+  - name: Test connection
+    ping:
+
+  - name: Добавить пользователей из списка с добавлением его в группу 'wheel'. Группа 'wheel' даёт права sudo
+    user:
+      name: {{ item }}
+        
+      shell: /bin/bash
+      groups: wheel
+      append: yes
+    loop: "{{ users }}"
+
+  - name: Создать 2048-битовый SSH ключ для пользователей в ~<username>/.ssh/mkl-ssh-key
+    user:
+      name: {{ item }}
+      generate_ssh_key: yes
+      ssh_key_bits: 2048
+      ssh_key_file: .ssh/{{ item }}-ssh-key
+    loop: "{{ users }}"
+
+  - name: Установить authorized key из файлов <username>-ssh-key.pub
+    authorized_key:
+      user: {{ item }}
+      state: present
+      key: "{{ lookup('file', '/home/kiril/.ssh/{{ item }}-ssh-key.pub') }}"
+    loop: "{{ users }}"
